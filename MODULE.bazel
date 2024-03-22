@@ -1,6 +1,47 @@
-###############################################################################
-# Bazel now uses Bzlmod by default to manage external dependencies.
-# Please consider migrating your external dependencies from WORKSPACE to MODULE.bazel.
-#
-# For more details, please check https://github.com/bazelbuild/bazel/issues/18958
-###############################################################################
+module(name = "grpc-gateway")
+
+bazel_dep(name = "rules_proto", version = "5.3.0-21.7")
+bazel_dep(name = "rules_go", version = "0.42.0", repo_name = "io_bazel_rules_go")
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(name = "gazelle", version = "0.33.0", repo_name = "bazel_gazelle")
+bazel_dep(name = "protobuf", version = "21.7", repo_name = "com_google_protobuf")
+
+go_deps = use_extension("@bazel_gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "@grpc-gateway//:go.mod")
+go_deps.module(
+    path = "google.golang.org/grpc/cmd/protoc-gen-go-grpc",
+    sum = "h1:lQ+dE99pFsb8osbJB3oRfE5eW4Hx6a/lZQr8Jh+eoT4=",
+    version = "v1.0.0",
+)
+
+use_repo(
+    go_deps,
+    "com_github_antihax_optional",
+    "com_github_google_go_cmp",
+    "com_github_rogpeppe_fastuuid",
+    "org_golang_x_oauth2",
+    "org_golang_x_text",
+    "org_golang_google_genproto_googleapis_api",
+    "org_golang_google_genproto_googleapis_rpc",
+    "org_golang_google_grpc",
+    "org_golang_google_protobuf",
+    "in_gopkg_yaml_v3",
+    "com_github_golang_protobuf",
+)
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_archive(
+    name = "googleapis",
+    strip_prefix = "googleapis-d81d0b9e6993d6ab425dff4d7c3d05fb2e59fa57",
+    build_file_content = """exports_files(glob(["**/*"]), visibility = ["//visibility:public"])""",
+    url = "https://github.com/googleapis/googleapis/archive/d81d0b9e6993d6ab425dff4d7c3d05fb2e59fa57.tar.gz",
+    sha256 = "a9aa8f8e727167dbf624a4bb7edcf4ebafb69c6f347e961b346e93423f7d51fc",
+)
+
+# TODO(bazelbuild/buildtools#1204): Remove when available as module.
+http_archive(
+    name = "com_github_bazelbuild_buildtools",
+    sha256 = "42968f9134ba2c75c03bb271bd7bb062afb7da449f9b913c96e5be4ce890030a",
+    strip_prefix = "buildtools-6.3.3",
+    urls = ["https://github.com/bazelbuild/buildtools/archive/v6.3.3.tar.gz"],
+)
